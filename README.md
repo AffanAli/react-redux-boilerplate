@@ -22,3 +22,16 @@ Go to src > actions > index.js, you will see fetchUser function. There is a hard
 - SideBar - This sidebar render side menu according to the permissions. User is supposed to have specific permissions or all permissions. Sidebar component render according to the permissions given in the user object.
 
 - Application_container - This Component is basically a container for all pages. This Component provides you a header, footer, sidemenu and placeholder for each page. 
+
+
+### Project Dependencies
+
+Install all Dependencies
+```
+npm install 
+```
+
+### Run Project
+```
+npm start
+```
