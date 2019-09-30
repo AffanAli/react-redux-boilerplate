@@ -6,14 +6,15 @@ Simple React Project with Redux
 ----------
 ```
 # Get User 
-_____________________
-Go to src > actions > index.js, you will see login function. There is a hardcoded user object in json format,you are supposed to object with the server response object
+- Go to src > actions > index.js, you will see login function. 
+- There is a hardcoded user object in json format,you are supposed to object with the server response object
 ```
 
 ```
 # Fetch User 
-_____________________
-Go to src > actions > index.js, you will see fetchUser function. There is a hardcoded user object in json format,you are supposed to object with the server response object
+
+- Go to src > actions > index.js, you will see fetchUser function. 
+- There is a hardcoded user object in json format,you are supposed to object with the server response object
 ```
 
 ### Project Features
