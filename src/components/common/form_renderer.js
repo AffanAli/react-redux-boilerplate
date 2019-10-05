@@ -1,5 +1,4 @@
 import React, { Component, Fragment } from 'react';
-import _ from 'lodash';
 import Cleave from 'cleave.js/react';
 import Select from 'react-select';
 import DatePicker from "react-datepicker";
@@ -10,7 +9,6 @@ import MultiSelect from "@khanacademy/react-multi-select";
 import { Notifications } from '../common/notification';
 import {Typeahead} from 'react-bootstrap-typeahead';
 import Card from '../common/card';
-import { VIEW_EMPLOYEE_PROFILE } from '../router/routeConstants';
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 
 
@@ -22,7 +20,8 @@ class FormRenderer extends Component {
             readOnly: this.props.readOnly ? true : false,
             fields: this.props.fields,
             forms : this.props.forms,
-            isProcessing: this.props.isProcessing
+            isProcessing: this.props.isProcessing,
+            inPlaceFieldValidation: this.props.inPlaceFieldValidation
         };
 
         // rendering function
@@ -58,15 +57,10 @@ class FormRenderer extends Component {
     }
 
     UNSAFE_componentWillReceivePropss(newProps) {
-        var {fields, forms, isProcessing } = newProps;
-        this.setState({fields, forms, isProcessing}, ()=>{
+        var {fields, forms, isProcessing, inPlaceFieldValidation } = newProps;
+        this.setState({fields, forms, isProcessing, inPlaceFieldValidation}, ()=>{
             this.preRenderingProcess();
         })
-    }
-
-    onEdit() {
-        this.setState({ readOnly: false });
-        this.props.setReadOnly(false);
     }
 
     updateFields() {
@@ -74,20 +68,20 @@ class FormRenderer extends Component {
 
         for (var i = 0; i < fields.length; i++) 
         {
-            if ("value" in fields[i]) {
-                fields[i].value = fields[i].value;
-            }
-            else if (fields[i].type === 'boolean') {
-                fields[i].value = false;
-            }
-            else if (fields[i].type === 'checkbox') {
-                fields[i].value = false;
-            }
-            else if (fields[i].type === 'multiselect') {
-                fields[i].value = [];
-            }
-            else {
-                fields[i].value = '';
+            if (!("value" in fields[i])) 
+            {
+                if (fields[i].type === 'boolean') {
+                    fields[i].value = false;
+                }
+                else if (fields[i].type === 'checkbox') {
+                    fields[i].value = false;
+                }
+                else if (fields[i].type === 'multiselect') {
+                    fields[i].value = [];
+                }
+                else {
+                    fields[i].value = '';
+                }
             }
             fields[i].error = (fields[i].error)? fields[i].error : ''
         }
@@ -106,17 +100,7 @@ class FormRenderer extends Component {
         this.setState({fields})
     }
 
-    /**
-     * Validate Field
-     * =================================
-     * 
-     * @param {*} field update the field according to validation 
-     * @param {*} value value of that field
-     * 
-     * return updated field
-     */
-    validateField(field, value) 
-    {
+    checkField(field, value) {
         const max = Number(field.max);
         const min = Number(field.min);
 
@@ -143,6 +127,23 @@ class FormRenderer extends Component {
             }
         }
 
+        return field;        
+    }
+
+    /**
+     * Validate Field
+     * =================================
+     * 
+     * @param {*} field update the field according to validation 
+     * @param {*} value value of that field
+     * 
+     * return updated field
+     */
+    validateField(field, value) 
+    {
+        if (this.state.inPlaceFieldValidation) {
+            return this.checkField(field, value);
+        }
         return field;
     }
 
@@ -150,7 +151,7 @@ class FormRenderer extends Component {
         var fields = this.state.fields;
 
         fields = fields.map((field, idx) => {
-            return this.validateField(field, field['value']);
+            return this.checkField(field, field['value']);
         })
         this.setState({fields});
     }
@@ -206,15 +207,7 @@ class FormRenderer extends Component {
     }
 
     onTerminate(link) {
-        if(link === VIEW_EMPLOYEE_PROFILE) {
-            this.props.history.push({
-                pathname: `${link}`,
-			    empID: `${this.props.location.emp_id}`
-            });
-        }
-        else {
-            this.props.history.push(link);
-        }
+        this.props.history.push(link);
     }
 
     handleChange(field, e) 
@@ -227,7 +220,7 @@ class FormRenderer extends Component {
 
         field.value = e.target.value;
 
-        if (field.type == "cleavejs") 
+        if (field.type === "cleavejs") 
             field.value = e.target.rawValue;
         
         field = this.validateField(field, field.value)
@@ -326,20 +319,19 @@ class FormRenderer extends Component {
 
     handleDateChange(field, date) {
 
+        var fields = this.state.fields;
+
         if(field.maxDate){
             if(date>field.maxDate){
-                var fields = this.state.fields;
                 fields[field.idx].value = field.maxDate;
                 this.setState({ fields });
             }
             else{
-                var fields = this.state.fields;
                 fields[field.idx].value = date;
                 this.setState({ fields });
             }
         }
         else{
-            var fields = this.state.fields;
             fields[field.idx].value = date;
             this.setState({ fields })
         }
@@ -572,7 +564,7 @@ class FormRenderer extends Component {
                 }
                 else if (field.type === 'date2') 
                 {
-                    fieldValue = (fieldValue == "" || fieldValue == null)?null:new Date(fieldValue);                    
+                    fieldValue = (fieldValue === "" || fieldValue == null)?null:new Date(fieldValue);                    
                     element = (
                         <div key={"field-" + idx} className={field.size}>
                             <div className="form-group form-group-float">
@@ -605,7 +597,7 @@ class FormRenderer extends Component {
 
                 else if (field.type === 'date') 
                 {
-                    fieldValue = (fieldValue == "" || fieldValue == null)?null:new Date(fieldValue);                    
+                    fieldValue = (fieldValue === "" || fieldValue == null)?null:new Date(fieldValue);                    
                     element = (
                         <div key={"field-" + idx} className={field.size}>
                             <div className="form-group">
@@ -739,7 +731,7 @@ class FormRenderer extends Component {
                                         key={field.idx}
                                         valueKey="value"
                                         labelKey="label"
-                                        value={field.options.find(option => option.value === fieldValue)}
+                                        value={field.options.find((option, fieldValue) => { return option.value === fieldValue})}
                                         placeholder={placeholderText}
                                         onChange={this.onSelect.bind(this, field)}
                                         options={field.options}
@@ -890,5 +882,6 @@ FormRenderer.defaultProps = {
     testSuit: null,
     collapse: false,
     buttonsContainerClass: "",
-    isProcessing: false
+    isProcessing: false,
+    inPlaceFieldValidation: true
 };
