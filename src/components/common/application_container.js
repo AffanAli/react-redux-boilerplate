@@ -52,6 +52,7 @@ class Container extends Component {
             content: null
         }
 
+        this.update_container_content = this.update_container_content.bind(this);
         this.onTabClick = this.onTabClick.bind(this);  
         this.__render_tabs = this.__render_tabs.bind(this);      
     }
@@ -64,6 +65,10 @@ class Container extends Component {
         * else:
         *       load the props childen as default content
         */
+       this.update_container_content()
+    }
+
+    update_container_content() {
         if (isNonEmptyList(this.state.tabs)) {
             this.setState({
                 selectedTab: this.state.tabs[0]['__name'],
@@ -77,9 +82,11 @@ class Container extends Component {
         }
     }
 
-    UNSAFE_componentWillReceivePropss(newProps) {
+    UNSAFE_componentWillReceiveProps(newProps) {
         var {showLoader, PageActions, tabs} = newProps;
-        this.setState({showLoader, PageActions, tabs})
+        this.setState({showLoader, PageActions, tabs}, () => {
+            this.update_container_content()
+        })
     }
 
     onTabClick(tab) {
